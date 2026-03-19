@@ -17,6 +17,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
 CORS(app)
 
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)  # suppress the dev server warning
+
 
 def _get_env_key(provider=''):
     if provider == 'openai':
@@ -111,7 +115,7 @@ def _call_ai(system_prompt, user_content, max_tokens=600, api_key='', provider='
         )
         return response.choices[0].message.content
 
-    return None
+    return '__NO_API_KEY__'
 
 
 @app.route('/api/analyze', methods=['POST', 'OPTIONS'])
@@ -133,8 +137,8 @@ def analyze():
 
     try:
         result = _call_ai(ANALYZE_PROMPT, context, api_key=api_key, provider=provider)
-        if result is None:
-            return jsonify({'error': '未找到 API Key，请在设置中填入你的 API Key'}), 500
+        if result == '__NO_API_KEY__':
+            return jsonify({'error': '请先在右下角 ⚙ 设置中填入你的 API Key'}), 400
         # Parse SCORE:X from end of response
         import re
         score = 2  # default: 混日子
@@ -174,8 +178,8 @@ def trend():
 
     try:
         result = _call_ai(TREND_PROMPT, context, max_tokens=400, api_key=api_key, provider=provider)
-        if result is None:
-            return jsonify({'error': '未找到 API Key'}), 500
+        if result == '__NO_API_KEY__':
+            return jsonify({'error': '请先在右下角 ⚙ 设置中填入你的 API Key'}), 400
         return jsonify({'result': result})
     except Exception as e:
         return jsonify({'error': f'API error: {str(e)}'}), 500
@@ -203,7 +207,7 @@ def suggest():
 
     try:
         result = _call_ai(SUGGEST_PROMPT, context, max_tokens=300, api_key=api_key, provider=provider)
-        if result is None:
+        if result == '__NO_API_KEY__':
             return jsonify({'suggestions': []}), 200
 
         # Parse JSON from AI response
@@ -231,4 +235,5 @@ if __name__ == '__main__':
     print("  Requires: Python 3.8+")
     print("  API key: set in browser settings (\u2699)")
     print("  Or env: ANTHROPIC_API_KEY / OPENAI_API_KEY")
+    print("  Note: ignore any Flask WARNING lines above — this is normal for local use")
     app.run(host='127.0.0.1', port=9527, debug=False)

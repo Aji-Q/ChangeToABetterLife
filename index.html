@@ -579,10 +579,11 @@ body::after{
 /* ── Settings Button & Panel ── */
 .settings-btn{
   position:fixed;bottom:16px;right:56px;z-index:300;
-  width:40px;height:40px;border-radius:50%;
+  padding:10px 16px;border-radius:2px;
   border:1px solid var(--border);background:rgba(8,8,16,0.9);
-  color:var(--text3);font-size:18px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);font-size:0.75rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-family:var(--font-body);
   transition:all 0.2s;backdrop-filter:blur(10px);
 }
 .settings-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,0.1)}
@@ -792,7 +793,7 @@ body::after{
 </div>
 
 <!-- Settings Button -->
-<button class="settings-btn" onclick="openSettings()">⚙</button>
+<button class="settings-btn" onclick="openSettings()">⚙ API 设置</button>
 
 <!-- Settings Panel -->
 <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings()"></div>
@@ -1063,15 +1064,22 @@ async function analyze() {
       }),
     });
 
-    if (!res.ok) throw new Error(`Server error: ${res.status}`);
     const data = await res.json();
-    if (data.error) throw new Error(data.error);
+    if (data.error) {
+      // Show API key error directly in the response area, not as a crash
+      if (data.error.includes('请先在右下角')) {
+        resp.innerHTML = `<div class="ai-response" style="color:var(--text2)">${esc(data.error)}</div>`;
+      } else {
+        resp.innerHTML = `<div class="ai-response" style="color:var(--text2)">${esc(data.error)}</div>`;
+        showToast('分析失败: ' + data.error, true);
+      }
+    } else {
+      const html = formatAIResponse(data.result);
+      resp.innerHTML = `<div class="ai-response">${html}</div>`;
 
-    const html = formatAIResponse(data.result);
-    resp.innerHTML = `<div class="ai-response">${html}</div>`;
-
-    saveReviewData(text, data.result, data.score);
-    recordReviewDay();
+      saveReviewData(text, data.result, data.score);
+      recordReviewDay();
+    }
   } catch (e) {
     resp.innerHTML = `<div class="ai-response" style="color:var(--text2)">
       无法连接到分析服务器。请确保 server.py 正在运行。

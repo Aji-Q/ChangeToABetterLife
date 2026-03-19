@@ -83,6 +83,7 @@ cd ~/Downloads/ChangeToABetterLife
 
 ```bash
 pip install -r requirements.txt
+# 如果看到 WARNING: A new release of pip is available，可以忽略，不影响使用
 ```
 
 > 如果提示 `pip` 找不到，试试 `pip3 install -r requirements.txt`
