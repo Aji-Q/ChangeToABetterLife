@@ -9,27 +9,29 @@ import io
 import json
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 CORS(app)
 
-# Fallback: load API key from environment or OpenClaw config
-def _load_api_key_from_env():
-    import pathlib
-    key = os.environ.get('ANTHROPIC_API_KEY', '')
-    if key:
-        return key
-    try:
-        cfg = pathlib.Path.home() / '.openclaw' / 'agents' / 'manager' / 'agent' / 'auth-profiles.json'
-        data = json.loads(cfg.read_text(encoding='utf-8'))
-        token = data.get('profiles', {}).get('anthropic:default', {}).get('token', '')
-        if token:
-            return token
-    except Exception:
-        pass
-    return ''
+
+def _get_env_key(provider=''):
+    if provider == 'openai':
+        return os.environ.get('OPENAI_API_KEY', '')
+    return os.environ.get('ANTHROPIC_API_KEY', '')
+
+
+@app.route('/')
+def index():
+    return send_from_directory(BASE_DIR, 'index.html')
+
+
+@app.route('/<path:filename>')
+def static_files(filename):
+    return send_from_directory(BASE_DIR, filename)
 
 ANALYZE_PROMPT = (
     "You are a concise productivity coach analyzing a student's day. "
@@ -81,15 +83,15 @@ def _call_ai(system_prompt, user_content, max_tokens=600, api_key='', provider='
 
     # Fallback to environment
     if not anthropic_key:
-        anthropic_key = os.environ.get('ANTHROPIC_API_KEY', '') or _load_api_key_from_env()
+        anthropic_key = _get_env_key()
     if not openai_key:
-        openai_key = os.environ.get('OPENAI_API_KEY', '')
+        openai_key = _get_env_key('openai')
 
     if anthropic_key and provider != 'openai':
         import anthropic
         client = anthropic.Anthropic(api_key=anthropic_key)
         message = client.messages.create(
-            model="claude-haiku-4-5",
+            model="claude-3-5-haiku-20241022",
             max_tokens=max_tokens,
             system=system_prompt,
             messages=[{"role": "user", "content": user_content}]
@@ -223,12 +225,10 @@ def health():
 
 if __name__ == '__main__':
     print("=" * 44)
-    print("  ChangeToABetterLife - Analysis Server")
-    print("  http://localhost:9527")
+    print("  ChangeToABetterLife")
+    print("  Open: http://localhost:9527")
     print("=" * 44)
-    has_key = bool(os.environ.get('ANTHROPIC_API_KEY') or os.environ.get('OPENAI_API_KEY'))
-    if has_key:
-        print("  API key (env): OK")
-    else:
-        print("  No env API key — users can set key in browser settings")
-    app.run(host='0.0.0.0', port=9527, debug=False)
+    print("  Requires: Python 3.8+")
+    print("  API key: set in browser settings (\u2699)")
+    print("  Or env: ANTHROPIC_API_KEY / OPENAI_API_KEY")
+    app.run(host='127.0.0.1', port=9527, debug=False)

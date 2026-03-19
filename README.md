@@ -10,7 +10,37 @@
 
 ---
 
-## 它能做什么
+## Requirements
+
+- **Python 3.8+**
+- Modern browser (Chrome / Edge / Firefox)
+- Anthropic or OpenAI API key
+
+---
+
+## 快速开始 / Quick Start
+
+```bash
+# 1. 安装依赖 / Install dependencies
+pip install -r requirements.txt
+
+# 2. 启动服务 / Start server
+python server.py
+
+# 3. 打开浏览器 / Open browser
+# http://localhost:9527
+
+# 4. 点右下角 ⚙ → 输入你的 API Key
+# Click ⚙ bottom-right → enter your API key
+```
+
+**获取 API Key / Get your API Key：**
+- Anthropic (Claude)：https://console.anthropic.com
+- OpenAI (GPT)：https://platform.openai.com
+
+---
+
+## 它能做什么 / Features
 
 ### 🎯 每日任务管理
 写下今天必须完成的事。完成打勾，没完成就是没完成。没有借口的空间。
@@ -54,24 +84,9 @@ AI 会分析你写的内容，然后给出：
 
 ---
 
-## 快速开始
+## Screenshots
 
-```bash
-# 1. 安装依赖
-pip install -r requirements.txt
-
-# 2. 启动后端服务
-python server.py
-
-# 3. 浏览器打开
-# http://localhost:9527
-```
-
-然后点右下角 ⚙ 图标，填入你的 API Key。
-
-**获取 API Key：**
-- Anthropic (Claude)：https://console.anthropic.com
-- OpenAI (GPT)：https://platform.openai.com
+> Screenshots coming soon
 
 ---
 
@@ -88,6 +103,12 @@ python server.py
 **你的行动才会。**
 
 但至少，它会让你没法再对自己撒谎。
+
+---
+
+## License
+
+MIT
 
 ---
 
