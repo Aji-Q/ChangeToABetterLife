@@ -6,93 +6,165 @@
 
 明天永远不来。
 
-**ChangeToABetterLife** 是一个每日追踪 + AI 复盘工具。它不给你鸡汤，不给你勋章，不哄你开心。它只做一件事：**告诉你，你今天到底过了什么样的一天。**
+**ChangeToABetterLife** 是一个每日任务追踪 + AI 复盘分析工具。它不给你鸡汤，不给你勋章，不哄你开心。它只做一件事：**告诉你，你今天到底过了什么样的一天。**
 
 ---
 
-## Requirements
+## 截图 / Screenshots
 
-- **Python 3.8+**
-- Modern browser (Chrome / Edge / Firefox)
-- Anthropic or OpenAI API key
+![主界面](screenshots/main.jpg)
+
+![日记本与AI分析](screenshots/journal.jpg)
 
 ---
 
-## 快速开始 / Quick Start
+## 功能 / Features
 
+| 功能 | 说明 |
+|------|------|
+| 🎯 每日任务 | 写下今天必须完成的事，完成打勾，没完成就是没完成 |
+| ⏱ 专注计时器 | 三档 Pomodoro：30m / 60m / 90m，没有自定义退路 |
+| 📓 每日复盘 | 写下今天的经历，AI 给出时间分析 + 明日建议 |
+| 📊 21天热力图 | 可视化你最近3周的生活质量，颜色不说谎 |
+| 🤖 AI智能推荐 | 根据历史记录，每天推荐具体可执行的今日任务 |
+| 📅 日记本 | 保存所有历史复盘，随时查看 AI 分析，支持导出 |
+
+**热力图等级：**
+- ⬜ 白色 = 无记录
+- 🔴 红色 = 正在摧毁人生
+- 🟠 橙色 = 混日子
+- 🟢 绿色 = 老实生活
+- 🩷 粉色 = **正在进化**
+
+---
+
+## 快速开始（从零开始的完整教程）
+
+### 第一步：下载项目
+
+**方式一：用 Git（推荐）**
 ```bash
-# 1. 安装依赖 / Install dependencies
-pip install -r requirements.txt
-
-# 2. 启动服务 / Start server
-python server.py
-
-# 3. 打开浏览器 / Open browser
-# http://localhost:9527
-
-# 4. 点右下角 ⚙ → 输入你的 API Key
-# Click ⚙ bottom-right → enter your API key
+git clone https://github.com/Aji-Q/ChangeToABetterLife.git
+cd ChangeToABetterLife
 ```
 
-**获取 API Key / Get your API Key：**
-- Anthropic (Claude)：https://console.anthropic.com
-- OpenAI (GPT)：https://platform.openai.com
+**方式二：直接下载 ZIP**
+点击页面右上角绿色 **Code** 按钮 → **Download ZIP** → 解压到任意文件夹
 
 ---
 
-## 它能做什么 / Features
+### 第二步：安装 Python
 
-### 🎯 每日任务管理
-写下今天必须完成的事。完成打勾，没完成就是没完成。没有借口的空间。
+> 如果你已经有 Python 3.8 或以上版本，跳过这步。
 
-### ⏱ 专注计时器（Pomodoro）
-三档模式，逼你选择：
-- ⚡ **快冲 30m** — 拖延症发作时的最低门槛
-- 💪 **深度 60m** — 正常工作节奏
-- 🗿 **巨石 90m** — 真正想做成一件事的时候
+1. 打开 https://www.python.org/downloads/
+2. 下载最新版本（点击黄色大按钮）
+3. 安装时 **务必勾选 "Add Python to PATH"**（如下图）
+4. 安装完成后打开终端，输入 `python --version`，看到版本号说明成功
 
-没有自定义时长。因为"我设个45分钟"是你在找退路。
-
-### 📓 每日复盘 + AI 分析
-睡前写下今天做了什么：玩了几小时游戏、学了多少、运动没有。
-
-AI 会分析你写的内容，然后给出：
-- **时间分析**：你把时间花在哪了，比例是否合理
-- **做得好的**：找到真实的亮点，不是空洞的表扬
-- **明日建议**：具体的、可执行的下一步，不是废话
-
-它会直接说："你的一天基本被原神占据了，6小时游戏 vs 1小时学习，时间分配极度失衡。"
-
-### 📊 21天热力图 — 你的人生轨迹一眼看清
-每天一个格子，颜色不说谎：
-
-| 颜色 | 等级 | 意味着 |
-|------|------|--------|
-| ⬜ 白色 | 无记录 | 你甚至没有记录这一天 |
-| 🔴 红色 | 正在摧毁人生 | 沉迷娱乐，几乎没有产出 |
-| 🟠 橙色 | 混日子 | 活着，但没有在前进 |
-| 🟢 绿色 | 老实生活 | 正常度过，有基本的自律 |
-| 🩷 粉色 | **正在进化** | 这一天，你真的在变好 |
-
-连续几天白格和红格——你会知道该怎么做。
-
-### 🤖 AI 智能推荐
-每天打开 app，AI 根据你过去几天的记录给出今日建议。不是通用模板，是真的看过你昨天"刷了7小时抖音"之后说："今天把手机时间压到2小时以内。"
-
-### 📅 日记本
-每一天的复盘、任务、AI分析都保存下来。点开历史任意一天，VIEW AI 按钮实时重新分析该天内容。导出全部记录为 `.txt` 文件。
+> **Windows 用户**：按 `Win + R`，输入 `cmd`，回车，打开命令提示符  
+> **Mac 用户**：按 `Cmd + Space`，输入 `Terminal`，回车
 
 ---
 
-## Screenshots
+### 第三步：安装依赖
 
-> Screenshots coming soon
+在终端里，先进入项目文件夹：
+
+```bash
+# Windows 示例（把路径换成你自己的）
+cd C:\Users\你的用户名\Downloads\ChangeToABetterLife
+
+# Mac / Linux 示例
+cd ~/Downloads/ChangeToABetterLife
+```
+
+然后安装依赖：
+
+```bash
+pip install -r requirements.txt
+```
+
+> 如果提示 `pip` 找不到，试试 `pip3 install -r requirements.txt`
 
 ---
 
-## 数据说明
+### 第四步：启动服务器
 
-所有数据存储在你的浏览器本地（localStorage）。没有服务器，没有账户，没有人看你的记录。**只有你自己知道你过了什么样的一天。**
+```bash
+python server.py
+```
+
+> 如果提示 `python` 找不到，试试 `python3 server.py`
+
+看到类似这样的输出说明启动成功：
+```
+======================================
+  ChangeToABetterLife
+  Open: http://localhost:9527
+======================================
+```
+
+> ⚠️ **重要：这个终端窗口必须保持开着。** 关掉它 AI 功能就停了。
+
+---
+
+### 第五步：打开浏览器
+
+浏览器地址栏输入：
+
+```
+http://localhost:9527
+```
+
+---
+
+### 第六步：配置 API Key
+
+点击页面右下角的 **⚙ 齿轮图标** → 输入你的 API Key → 点 SAVE。
+
+**如何获取 API Key：**
+
+| 服务 | 地址 | 说明 |
+|------|------|------|
+| Anthropic (Claude) | https://console.anthropic.com | 注册后在 API Keys 页面创建 |
+| OpenAI (GPT) | https://platform.openai.com | 注册后在 API Keys 页面创建 |
+
+> 💰 **关于费用**：API Key 按使用量计费，不是订阅制。每次 AI 分析大约消耗 $0.001（约0.007元人民币），日常使用费用极低。新用户通常有免费额度。
+
+---
+
+## 使用建议
+
+1. **早上**：看 AI 推荐，把今天要做的事填进任务列表
+2. **做事时**：开计时器，专注25-90分钟
+3. **睡前**：在"今日复盘"写今天发生了什么，点 ANALYZE，看 AI 怎么说
+4. **坚持**：21天热力图会让你看见自己的变化
+
+---
+
+## 数据与隐私
+
+- 所有数据存储在你的**浏览器本地**（localStorage）
+- 数据**不会上传到任何服务器**，只在你自己的电脑上
+- 你的复盘文字会发送给 Anthropic 或 OpenAI 的 API 进行分析（和正常使用 Claude/ChatGPT 一样）
+- 关电脑重启不影响数据；但清除浏览器缓存会删掉数据，建议定期点"导出 ↓"备份
+
+---
+
+## 常见问题
+
+**Q: 打开 http://localhost:9527 显示"无法访问此网站"？**  
+A: server.py 没有运行，回到第四步重新启动。
+
+**Q: 点 ANALYZE 没有反应或报错？**  
+A: 检查右下角 ⚙ 里的 API Key 是否已填写并保存。
+
+**Q: pip install 报错？**  
+A: 尝试 `pip3 install -r requirements.txt`，或者确认 Python 安装时勾选了 PATH。
+
+**Q: 换了台电脑，历史记录没了？**  
+A: localStorage 是浏览器本地存储，不跨设备同步。记得用"导出 ↓"备份。
 
 ---
 
@@ -108,9 +180,6 @@ AI 会分析你写的内容，然后给出：
 
 ## License
 
-MIT
-
----
+MIT — 随便用，随便改，给个 ⭐ Star 就是最好的反馈。
 
 *Made with frustration and too many wasted evenings.*
-*如果这个工具帮到了你，给个 ⭐ Star 就是最好的反馈。*
