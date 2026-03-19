@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChangeToABetterLife</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#080810;
+  --surface:rgba(255,255,255,0.03);
+  --surface2:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.08);
+  --border-hover:rgba(255,255,255,0.15);
+  --accent:#7c3aed;
+  --accent-hover:#9061f9;
+  --accent-glow:rgba(124,58,237,0.15);
+  --text:#e8e8ed;
+  --text2:#6b6b80;
+  --text3:#3a3a4e;
+  --success:#22c55e;
+  --danger:#ef4444;
+  --warning:#f59e0b;
+  --font-display:'Bebas Neue',system-ui,sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --font-body:'Inter',system-ui,sans-serif;
+}
+
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse at 15% 40%, rgba(124,58,237,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 70%, rgba(41,121,255,0.1) 0%, transparent 60%);
+  color:var(--text);min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Grain overlay ── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:0.035;
+  mix-blend-mode:overlay;
+}
+
+/* ── Scanline effect ── */
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
+
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:2px}
+
+/* ── Layout ── */
+.app{position:relative;z-index:1}
+
+/* ── Pomodoro Header ── */
+.pomo-header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,8,16,0.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.pomo-inner{
+  max-width:720px;margin:0 auto;padding:20px 32px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.pomo-mode-label{
+  font-family:var(--font-display);font-size:1.1rem;
+  letter-spacing:0.25em;color:var(--text2);
+  text-transform:uppercase;
+}
+.pomo-time-row{display:flex;align-items:center;gap:16px}
+
+.pomo-timer-wrap{position:relative;display:inline-flex;padding:4px 0}
+
+.pomo-time-display{
+  font-family:var(--font-mono);
+  font-size:4.5rem;font-weight:400;color:#fff;
+  font-variant-numeric:tabular-nums;letter-spacing:0.05em;
+  line-height:1;transition:all 0.3s;
+}
+.pomo-time-display.running{
+  text-shadow:0 0 40px rgba(124,58,237,0.5), 0 0 80px rgba(124,58,237,0.2);
+}
+.pomo-time-display.running.work-phase{
+  text-shadow:0 0 40px rgba(239,68,68,0.5), 0 0 80px rgba(239,68,68,0.2);
+}
+.pomo-time-display.running.break-phase{
+  text-shadow:0 0 40px rgba(34,197,94,0.5), 0 0 80px rgba(34,197,94,0.2);
+}
+
+.pomo-ring{
+  display:none;position:absolute;inset:-8px;border-radius:4px;pointer-events:none;
+}
+.pomo-ring.active{display:block;animation:ringPulse 2s ease-in-out infinite}
+.pomo-ring.work-ring{box-shadow:0 0 0 1px rgba(239,68,68,0.3)}
+.pomo-ring.break-ring{box-shadow:0 0 0 1px rgba(34,197,94,0.3)}
+@keyframes ringPulse{0%,100%{opacity:1}50%{opacity:0.2}}
+
+.pomo-controls{display:flex;gap:8px;margin-top:8px}
+.pomo-btn{
+  padding:8px 24px;border:1px solid var(--border);border-radius:2px;
+  background:transparent;color:var(--text2);font-size:0.7rem;
+  font-family:var(--font-display);letter-spacing:0.2em;
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;
+}
+.pomo-btn:hover{border-color:var(--border-hover);color:var(--text);background:var(--surface2)}
+.pomo-btn.primary{border-color:var(--accent);color:#fff;background:var(--accent)}
+.pomo-btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+
+.pomo-modes{
+  max-width:720px;margin:0 auto;padding:8px 32px 10px;
+  display:flex;gap:4px;justify-content:center;
+}
+.pomo-mode-btn{
+  padding:6px 16px;border:1px solid var(--border);border-radius:2px;
+  background:transparent;color:var(--text3);font-size:0.65rem;
+  font-family:var(--font-display);letter-spacing:0.2em;
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;
+}
+.pomo-mode-btn:hover{border-color:var(--border-hover);color:var(--text2)}
+.pomo-mode-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,0.08)}
+.pomo-mode-btn.locked{opacity:0.25;cursor:not-allowed;pointer-events:none}
+
+.pomo-progress{height:1px;background:var(--border);position:relative;overflow:hidden}
+.pomo-progress-bar{height:100%;width:0%;transition:width 1s linear}
+.pomo-progress-bar.work{background:var(--danger)}
+.pomo-progress-bar.break-mode{background:var(--success)}
+
+/* ── Container ── */
+.container{
+  max-width:720px;margin:0 auto;padding:48px 32px 140px;
+  position:relative;
+}
+
+/* ── Section headers — TYPOGRAPHY IS THE UI ── */
+.section-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:4px;
+}
+.section-header-left{display:flex;flex-direction:column;gap:0}
+.section-header h1{
+  font-family:var(--font-display);
+  font-size:4.5rem;font-weight:400;letter-spacing:0.04em;color:#fff;
+  line-height:0.9;text-transform:uppercase;
+}
+.section-subtitle{
+  font-size:0.7rem;color:var(--text3);font-weight:400;
+  font-family:var(--font-mono);letter-spacing:0.12em;
+  margin-bottom:32px;text-transform:uppercase;
+}
+.section-header .date{
+  font-size:0.75rem;color:var(--text3);font-weight:400;
+  font-family:var(--font-mono);letter-spacing:0.05em;
+  padding-bottom:8px;
+}
+
+.history-btn{
+  padding:8px 20px;border:1px solid var(--border);border-radius:2px;
+  background:transparent;color:var(--text3);font-size:0.65rem;
+  font-family:var(--font-display);letter-spacing:0.2em;
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;
+  margin-bottom:8px;
+}
+.history-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,0.05)}
+
+/* ── Task Input ── */
+.task-input-wrap{position:relative;margin-bottom:24px}
+.task-input{
+  width:100%;padding:16px 20px;
+  background:transparent;
+  border:none;border-bottom:1px solid var(--border);
+  color:var(--text);font-size:0.9375rem;
+  font-family:var(--font-body);outline:none;
+  transition:border-color 0.3s;
+  border-radius:0;
+}
+.task-input:focus{border-bottom-color:var(--accent)}
+.task-input::placeholder{color:var(--text3);font-style:italic}
+
+/* ── AI Suggestions ── */
+.suggestions-wrap{margin-bottom:20px;animation:fadeIn 0.5s ease}
+.suggestions-label{
+  font-size:0.6rem;color:var(--text3);margin-bottom:10px;
+  font-family:var(--font-display);
+  text-transform:uppercase;letter-spacing:0.3em;
+}
+.suggestion-item{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;
+  border-left:2px solid var(--accent);
+  background:var(--surface);
+  margin-bottom:2px;
+  transition:all 0.2s;
+}
+.suggestion-item:hover{background:var(--surface2);border-left-color:var(--accent-hover)}
+.suggestion-text{flex:1;font-size:0.8125rem;color:var(--text2)}
+.suggestion-add{
+  padding:4px 0;border:none;background:transparent;color:var(--accent);
+  font-size:0.65rem;font-family:var(--font-display);letter-spacing:0.15em;
+  cursor:pointer;transition:all 0.2s;flex-shrink:0;text-transform:uppercase;
+}
+.suggestion-add:hover{color:var(--accent-hover)}
+
+/* ── Task List ── */
+.task-list{display:flex;flex-direction:column;gap:0;margin-bottom:8px}
+
+.task-item{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  transition:all 0.2s;animation:fadeIn 0.25s ease;
+}
+.task-item:hover{background:var(--surface)}
+.task-item:last-child{border-bottom:none}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.empty-state{
+  color:var(--text3);font-size:.75rem;padding:20px 0;
+  font-family:var(--font-mono);letter-spacing:0.05em;
+  font-style:italic;
+}
+
+.task-checkbox{
+  width:18px;height:18px;border-radius:2px;
+  border:1.5px solid var(--border-hover);
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all 0.2s;
+  color:transparent;font-size:11px;padding:0;
+}
+.task-checkbox:hover{border-color:var(--accent);background:rgba(124,58,237,0.1)}
+.task-checkbox.checked{border-color:var(--accent);background:var(--accent);color:#fff}
+
+.task-text{
+  flex:1;font-size:0.875rem;line-height:1.5;transition:all 0.3s;word-break:break-word;
+  font-weight:400;
+}
+.task-text.done{text-decoration:line-through;color:var(--text3);text-decoration-color:var(--text3)}
+
+.task-delete{
+  width:24px;height:24px;border-radius:2px;border:none;
+  background:transparent;color:var(--text3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;opacity:0;transition:all 0.15s;flex-shrink:0;font-family:inherit;
+}
+.task-item:hover .task-delete{opacity:1}
+.task-delete:hover{background:rgba(239,68,68,0.1);color:var(--danger)}
+
+.all-done{
+  text-align:center;padding:20px 0;
+  font-family:var(--font-display);font-size:1.2rem;
+  letter-spacing:0.2em;color:var(--success);
+  text-transform:uppercase;
+  opacity:0;animation:fadeIn 0.4s ease 0.2s forwards;
+}
+
+/* ── Divider ── */
+.divider{
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--border), transparent);
+  margin:48px 0;
+}
+
+/* ── Review ── */
+.review-header{margin-bottom:4px}
+.review-header h2{
+  font-family:var(--font-display);
+  font-size:3rem;font-weight:400;color:#fff;
+  letter-spacing:0.04em;text-transform:uppercase;
+  line-height:0.9;
+}
+.review-subtitle{
+  font-size:0.7rem;color:var(--text3);
+  font-family:var(--font-mono);letter-spacing:0.1em;
+  margin-bottom:24px;
+}
+
+.review-textarea{
+  width:100%;min-height:160px;padding:20px;
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);font-size:0.875rem;
+  font-family:var(--font-body);line-height:1.8;
+  outline:none;resize:vertical;
+  transition:border-color 0.3s;
+  border-radius:0;
+}
+.review-textarea:focus{border-color:var(--accent)}
+.review-textarea::placeholder{color:var(--text3);font-style:italic}
+
+.review-actions{
+  display:flex;align-items:center;justify-content:space-between;margin-top:16px;
+}
+.review-hint{font-size:0.65rem;color:var(--text3);font-family:var(--font-mono);letter-spacing:0.05em}
+
+.analyze-btn{
+  padding:10px 32px;border:1px solid var(--accent);border-radius:2px;
+  background:var(--accent);color:#fff;
+  font-size:0.65rem;font-family:var(--font-display);
+  letter-spacing:0.25em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+.analyze-btn:hover{background:var(--accent-hover);border-color:var(--accent-hover);transform:translateY(-1px)}
+.analyze-btn:active{transform:translateY(0)}
+.analyze-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+/* ── AI Response ── */
+.ai-response{
+  margin-top:24px;padding:24px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:2px solid var(--accent);
+  font-size:0.8125rem;line-height:1.8;
+  animation:fadeIn 0.4s ease;
+}
+.ai-response h3{
+  color:var(--accent);font-size:0.6rem;
+  font-family:var(--font-display);
+  text-transform:uppercase;letter-spacing:0.3em;
+  margin-bottom:8px;margin-top:20px;
+}
+.ai-response h3:first-child{margin-top:0}
+.ai-response p{color:var(--text);margin-bottom:4px}
+.ai-response ul{margin:0;padding-left:16px}
+.ai-response li{margin-bottom:4px;color:var(--text2)}
+.ai-response strong{color:#fff;font-weight:600}
+
+.loading-spinner{
+  display:flex;align-items:center;gap:12px;
+  padding:20px 0;color:var(--text2);font-size:0.8125rem;
+  font-family:var(--font-mono);
+}
+.spinner{
+  width:14px;height:14px;border:1.5px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Heatmap ── */
+.heatmap-section{
+  margin-top:48px;
+  border-top:1px solid var(--border);
+  padding-top:32px;
+}
+.heatmap-title{
+  font-family:var(--font-display);font-size:0.6rem;
+  text-transform:uppercase;letter-spacing:0.4em;color:var(--text3);
+  margin-bottom:16px;text-align:center;
+}
+.heatmap-outer{display:flex;justify-content:center;gap:6px}
+.heatmap-weekdays{display:flex;flex-direction:column;gap:4px;padding-top:0}
+.heatmap-weekday-label{
+  height:28px;display:flex;align-items:center;
+  font-size:0.6rem;color:var(--text3);font-family:var(--font-mono);
+}
+.heatmap-grid{
+  display:grid;grid-template-columns:repeat(7,28px);grid-template-rows:repeat(3,28px);
+  gap:3px;justify-content:center;grid-auto-flow:column;
+}
+.heatmap-cell{
+  width:28px;height:28px;border-radius:2px;
+  background:#ffffff;position:relative;cursor:default;
+  transition:transform 0.15s,box-shadow 0.15s;
+}
+@keyframes pink-pulse {
+  0%, 100% { box-shadow: 0 0 10px #ff2d78, 0 0 20px rgba(255,45,120,0.5); }
+  50% { box-shadow: 0 0 20px #ff2d78, 0 0 40px rgba(255,45,120,0.8), 0 0 60px rgba(255,45,120,0.3); }
+}
+.heatmap-cell.status-pink {
+  background: #ff2d78 !important;
+  animation: pink-pulse 2s ease-in-out infinite;
+}
+
+.heatmap-cell:hover{transform:scale(1.2)}
+.heatmap-cell[data-tooltip]:hover::after{
+  content:attr(data-tooltip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);padding:8px 14px;border-radius:2px;
+  background:rgba(20,20,30,0.95);border:1px solid var(--border);
+  font-size:0.6rem;color:var(--text);white-space:nowrap;z-index:10;
+  pointer-events:none;font-family:var(--font-mono);letter-spacing:0.02em;
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+}
+.heatmap-cell.today-empty{
+  background:var(--accent);
+  animation:todayPulse 2.5s ease-in-out infinite;
+}
+@keyframes todayPulse{
+  0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(124,58,237,0.5)}
+  50%{opacity:0.6;box-shadow:0 0 16px 4px rgba(124,58,237,0.3)}
+}
+.heatmap-cell.glow-red{box-shadow:0 0 10px rgba(255,23,68,0.6)}
+.heatmap-cell.glow-blue{box-shadow:0 0 10px rgba(41,121,255,0.6)}
+
+.heatmap-legend{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  margin-top:16px;flex-wrap:wrap;
+}
+.heatmap-legend-item{
+  display:flex;align-items:center;gap:6px;font-size:0.6rem;color:var(--text3);
+  font-family:var(--font-mono);letter-spacing:0.02em;
+}
+.heatmap-legend-dot{width:10px;height:10px;border-radius:2px}
+.heatmap-streak{
+  text-align:center;margin-top:12px;font-size:0.7rem;color:var(--text2);
+  font-family:var(--font-display);letter-spacing:0.2em;
+  text-transform:uppercase;
+}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(100px);
+  padding:12px 28px;border-radius:2px;
+  background:rgba(20,20,30,0.95);border:1px solid var(--border);
+  color:var(--text);font-size:0.75rem;
+  font-family:var(--font-mono);letter-spacing:0.03em;
+  z-index:9999;transition:transform 0.3s ease;
+  pointer-events:none;backdrop-filter:blur(10px);
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{border-color:var(--danger);color:var(--danger)}
+
+/* ── History Drawer ── */
+.drawer-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+.drawer-backdrop.open{opacity:1;pointer-events:auto}
+
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:520px;
+  background:var(--bg);border-left:1px solid var(--border);
+  z-index:201;transform:translateX(100%);
+  transition:transform 0.3s ease;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.drawer.open{transform:translateX(0)}
+
+.drawer-header{
+  padding:28px 28px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-end;justify-content:space-between;flex-shrink:0;
+}
+.drawer-header h2{
+  font-family:var(--font-display);
+  font-size:2.5rem;font-weight:400;color:#fff;
+  letter-spacing:0.04em;text-transform:uppercase;
+  line-height:0.9;
+}
+.drawer-header-actions{display:flex;gap:8px;align-items:center}
+.drawer-close{
+  width:28px;height:28px;border-radius:2px;border:1px solid var(--border);
+  background:transparent;color:var(--text3);cursor:pointer;
+  font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;font-family:inherit;
+}
+.drawer-close:hover{background:var(--surface);color:var(--text);border-color:var(--border-hover)}
+
+.export-btn{
+  padding:6px 14px;border:1px solid var(--border);border-radius:2px;
+  background:transparent;color:var(--text3);font-size:0.6rem;
+  font-family:var(--font-display);letter-spacing:0.2em;
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;
+}
+.export-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+.drawer-content{flex:1;overflow-y:auto;padding:24px 28px}
+
+.drawer-actions{padding:0 0 24px;display:flex;gap:8px}
+.trend-btn{
+  flex:1;padding:10px 16px;border:1px solid var(--accent);border-radius:2px;
+  background:transparent;color:var(--accent);font-size:0.6rem;
+  font-family:var(--font-display);letter-spacing:0.2em;
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;
+}
+.trend-btn:hover{background:var(--accent);color:#fff}
+.trend-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+.trend-result{
+  margin-bottom:24px;padding:20px;
+  background:var(--surface);border:1px solid var(--border);
+  border-left:2px solid var(--accent);
+  font-size:0.8125rem;line-height:1.8;
+  color:var(--text);animation:fadeIn 0.4s ease;
+}
+
+/* ── Journal entries ── */
+.journal-entry{
+  margin-bottom:20px;padding:24px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:3px solid var(--border);
+  animation:fadeIn 0.3s ease;
+}
+.journal-entry.status-red{border-left-color:#ff1744}
+.journal-entry.status-orange{border-left-color:#ff6d00}
+.journal-entry.status-green{border-left-color:#00e676}
+.journal-entry.status-pink{border-left-color:#2979ff}
+.journal-entry.status-white{border-left-color:rgba(255,255,255,0.15)}
+
+.journal-date{
+  font-family:var(--font-display);
+  font-size:1.5rem;font-weight:400;color:#fff;
+  margin-bottom:14px;letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+.journal-text{
+  font-size:0.875rem;line-height:1.8;color:var(--text2);
+  white-space:pre-wrap;word-break:break-word;
+}
+.journal-ai-toggle{
+  margin-top:16px;padding:14px 0 0;border-top:1px solid var(--border);
+}
+.journal-ai-btn{
+  padding:6px 14px;border:1px solid var(--border);border-radius:2px;
+  background:transparent;color:var(--text3);font-size:0.6rem;
+  font-family:var(--font-display);letter-spacing:0.15em;
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.journal-ai-btn:hover{border-color:var(--accent);color:var(--accent)}
+.journal-ai-content{
+  margin-top:14px;padding:20px;
+  background:rgba(0,0,0,0.3);border:1px solid var(--border);
+  border-left:2px solid var(--accent);
+  font-size:0.8125rem;line-height:1.8;
+  color:var(--text);animation:fadeIn 0.3s ease;
+}
+.journal-ai-content h3{
+  color:var(--accent);font-size:0.6rem;
+  font-family:var(--font-display);
+  text-transform:uppercase;letter-spacing:0.3em;
+  margin-bottom:8px;margin-top:16px;
+}
+.journal-ai-content h3:first-child{margin-top:0}
+.journal-tasks{
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--border);
+}
+.journal-tasks-label{
+  font-size:0.6rem;color:var(--text3);
+  font-family:var(--font-display);text-transform:uppercase;
+  letter-spacing:0.25em;margin-bottom:8px;
+}
+.journal-task-item{
+  font-size:0.8125rem;color:var(--text2);padding:3px 0;
+  font-family:var(--font-mono);
+}
+.journal-task-item.done{color:var(--success)}
+.journal-task-item.undone{color:var(--text3)}
+
+.history-empty{
+  text-align:center;padding:60px 0;
+  font-family:var(--font-display);
+  font-size:1.8rem;letter-spacing:0.1em;color:var(--text3);
+  opacity:0.3;text-transform:uppercase;
+}
+
+/* ── Version tag ── */
+.version-tag{
+  position:fixed;bottom:12px;right:16px;z-index:1;
+  font-family:var(--font-mono);font-size:0.55rem;
+  color:var(--text3);letter-spacing:0.1em;opacity:0.4;
+}
+
+/* ── Settings Button & Panel ── */
+.settings-btn{
+  position:fixed;bottom:16px;right:56px;z-index:300;
+  width:40px;height:40px;border-radius:50%;
+  border:1px solid var(--border);background:rgba(8,8,16,0.9);
+  color:var(--text3);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;backdrop-filter:blur(10px);
+}
+.settings-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,0.1)}
+
+.settings-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);
+  z-index:310;opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+.settings-backdrop.open{opacity:1;pointer-events:auto}
+
+.settings-panel{
+  position:fixed;bottom:0;left:0;right:0;z-index:311;
+  background:var(--bg);border-top:1px solid var(--border);
+  transform:translateY(100%);transition:transform 0.3s ease;
+  max-height:70vh;overflow-y:auto;
+}
+.settings-panel.open{transform:translateY(0)}
+
+.settings-inner{
+  max-width:520px;margin:0 auto;padding:28px 32px 36px;
+}
+.settings-title{
+  font-family:var(--font-display);font-size:1.8rem;
+  color:#fff;letter-spacing:0.08em;margin-bottom:24px;
+  text-transform:uppercase;
+}
+.settings-group{margin-bottom:20px}
+.settings-label{
+  font-size:0.6rem;color:var(--text3);
+  font-family:var(--font-display);text-transform:uppercase;
+  letter-spacing:0.25em;margin-bottom:8px;
+}
+.settings-radios{display:flex;gap:8px;margin-bottom:16px}
+.settings-radio{
+  padding:8px 20px;border:1px solid var(--border);border-radius:2px;
+  background:transparent;color:var(--text3);font-size:0.75rem;
+  font-family:var(--font-body);cursor:pointer;transition:all 0.2s;
+}
+.settings-radio:hover{border-color:var(--border-hover);color:var(--text)}
+.settings-radio.active{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,0.08)}
+
+.settings-input{
+  width:100%;padding:12px 16px;
+  background:transparent;border:1px solid var(--border);
+  color:var(--text);font-size:0.8125rem;
+  font-family:var(--font-mono);outline:none;
+  transition:border-color 0.3s;border-radius:0;
+}
+.settings-input:focus{border-color:var(--accent)}
+.settings-input::placeholder{color:var(--text3)}
+
+.settings-help{
+  font-size:0.7rem;color:var(--text3);line-height:1.6;
+  font-family:var(--font-mono);margin-top:16px;
+}
+.settings-help a{color:var(--accent);text-decoration:none}
+.settings-help a:hover{text-decoration:underline}
+
+.settings-save{
+  margin-top:20px;padding:10px 32px;
+  border:1px solid var(--accent);border-radius:2px;
+  background:var(--accent);color:#fff;
+  font-size:0.65rem;font-family:var(--font-display);
+  letter-spacing:0.25em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+.settings-save:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+
+/* ── API Key Banner ── */
+.api-banner{
+  max-width:720px;margin:0 auto;padding:12px 20px;
+  background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);
+  color:var(--text2);font-size:0.8rem;
+  font-family:var(--font-body);
+  text-align:center;cursor:pointer;transition:all 0.2s;
+}
+.api-banner:hover{background:rgba(124,58,237,0.12);color:var(--text)}
+
+/* ── Mobile ── */
+@media(max-width:640px){
+  .container{padding:32px 20px 120px}
+  .section-header h1{font-size:3rem}
+  .review-header h2{font-size:2rem}
+  .pomo-time-display{font-size:3rem}
+  .task-delete{opacity:0.5}
+  .review-actions{flex-direction:column;gap:8px;align-items:stretch}
+  .review-hint{text-align:center}
+  .drawer{width:100%}
+  .pomo-inner{padding:14px 20px 8px;gap:2px}
+  .pomo-btn{padding:6px 16px;font-size:0.6rem}
+  .pomo-modes{padding:4px 20px 8px;gap:4px}
+  .pomo-mode-btn{font-size:0.55rem;padding:5px 10px}
+  .heatmap-grid{grid-template-columns:repeat(7,24px);grid-template-rows:repeat(3,24px);gap:2px}
+  .heatmap-cell{width:24px;height:24px}
+  .heatmap-weekday-label{height:24px;font-size:0.55rem}
+  .settings-inner{padding:20px 20px 28px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- Pomodoro Header -->
+<div class="pomo-header">
+  <div class="pomo-inner">
+    <div class="pomo-mode-label" id="pomoModeLabel">SPRINT</div>
+    <div class="pomo-time-row">
+      <div class="pomo-timer-wrap">
+        <div class="pomo-ring" id="pomoRing"></div>
+        <div class="pomo-time-display" id="pomoTime">30:00</div>
+      </div>
+    </div>
+    <div class="pomo-controls">
+      <button class="pomo-btn primary" id="pomoStartBtn" onclick="Pomo.toggle()">开始</button>
+      <button class="pomo-btn" onclick="Pomo.reset()">重置</button>
+      <button class="pomo-btn" onclick="Pomo.skip()">跳过</button>
+    </div>
+  </div>
+  <div class="pomo-modes" id="pomoModes">
+    <button class="pomo-mode-btn active" data-mode="quick" onclick="Pomo.setMode('quick')">⚡ 快冲 30m</button>
+    <button class="pomo-mode-btn" data-mode="deep" onclick="Pomo.setMode('deep')">💪 深度 60m</button>
+    <button class="pomo-mode-btn" data-mode="boulder" onclick="Pomo.setMode('boulder')">🗿 巨石 90m</button>
+  </div>
+  <div class="pomo-progress"><div class="pomo-progress-bar" id="pomoProgress"></div></div>
+</div>
+
+<!-- API Key Banner -->
+<div class="api-banner" id="apiBanner" style="display:none" onclick="openSettings()">
+  ℹ️ 请在设置中填入你的 API Key 以启用 AI 功能
+</div>
+
+<div class="container">
+  <!-- Section 1: Today's Tasks -->
+  <div class="section-header">
+    <div class="section-header-left">
+      <h1>今日任务</h1>
+      <span class="date" id="todayDate"></span>
+    </div>
+    <button class="history-btn" onclick="openDrawer()">历史记录</button>
+  </div>
+  <div class="section-subtitle">track it. face it. own it.</div>
+
+  <div class="task-input-wrap">
+    <input class="task-input" id="taskInput"
+           placeholder="今天必须完成的事..." maxlength="200"
+           autocomplete="off">
+  </div>
+
+  <div id="suggestionsArea"></div>
+  <div class="task-list" id="taskList"></div>
+  <div id="allDone"></div>
+
+  <div class="divider"></div>
+
+  <!-- Section 2: Daily Review -->
+  <div class="review-header">
+    <h2>今日复盘</h2>
+  </div>
+  <div class="review-subtitle">// ctrl+enter to analyze</div>
+
+  <textarea class="review-textarea" id="reviewText"
+    placeholder="今天做了什么？玩了几小时手机？学习了多少？睡了多久？运动了吗？想到什么就写什么，AI 来帮你分析..."></textarea>
+
+  <div class="review-actions">
+    <span class="review-hint">ctrl+enter 提交分析</span>
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">ANALYZE →</button>
+  </div>
+
+  <div id="aiResponse"></div>
+
+  <!-- Section 3: Heatmap -->
+  <div class="heatmap-section">
+    <div class="heatmap-title">21 Day Overview</div>
+    <div class="heatmap-outer">
+      <div class="heatmap-weekdays" id="heatmapWeekdays"></div>
+      <div class="heatmap-grid" id="heatmapGrid"></div>
+    </div>
+    <div class="heatmap-legend">
+      <div class="heatmap-legend-item"><div class="heatmap-legend-dot" style="background:#ffffff;border:1px solid rgba(255,255,255,0.1)"></div>无记录</div>
+      <div class="heatmap-legend-item"><div class="heatmap-legend-dot" style="background:#ff1744;box-shadow:0 0 6px #ff1744"></div>摧毁人生</div>
+      <div class="heatmap-legend-item"><div class="heatmap-legend-dot" style="background:#ff6d00"></div>混日子</div>
+      <div class="heatmap-legend-item"><div class="heatmap-legend-dot" style="background:#00e676"></div>老实生活</div>
+      <div class="heatmap-legend-item"><div class="heatmap-legend-dot" style="background:#ff2d78;box-shadow:0 0 12px #ff2d78, 0 0 24px rgba(255,45,120,0.5)"></div>正在进化</div>
+    </div>
+    <div class="heatmap-streak" id="heatmapStreak"></div>
+  </div>
+</div>
+
+<!-- History Drawer -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h2>日记本</h2>
+    <div class="drawer-header-actions">
+      <button class="export-btn" onclick="exportJournal()">导出 ↓</button>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+  </div>
+  <div class="drawer-content">
+    <div class="drawer-actions">
+      <button class="trend-btn" id="trendBtn" onclick="analyzeTrend()">TREND ANALYSIS</button>
+    </div>
+    <div id="trendResult"></div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<!-- Settings Button -->
+<button class="settings-btn" onclick="openSettings()">⚙</button>
+
+<!-- Settings Panel -->
+<div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-inner">
+    <div class="settings-title">API 设置</div>
+
+    <div class="settings-group">
+      <div class="settings-label">AI Provider</div>
+      <div class="settings-radios" id="providerRadios">
+        <button class="settings-radio active" data-provider="anthropic" onclick="selectProvider('anthropic')">Anthropic (Claude)</button>
+        <button class="settings-radio" data-provider="openai" onclick="selectProvider('openai')">OpenAI (GPT)</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-label">API Key</div>
+      <input class="settings-input" id="settingsApiKey" type="password"
+             placeholder="sk-ant-... 或 sk-..." autocomplete="off">
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-label">Server URL</div>
+      <input class="settings-input" id="settingsServerUrl" type="text"
+             placeholder="http://localhost:9527">
+    </div>
+
+    <div class="settings-help">
+      获取 Anthropic key: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      获取 OpenAI key: <a href="https://platform.openai.com" target="_blank">platform.openai.com</a>
+    </div>
+
+    <button class="settings-save" onclick="saveSettings()">SAVE</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Version -->
+<div class="version-tag">ChangeToABetterLife</div>
+
+</div><!-- /app -->
+
+<script>
+// ── Constants ──
+const TODAY = new Date().toISOString().slice(0, 10);
+const DEFAULT_SERVER = 'http://localhost:9527';
+
+function getSettings() {
+  try {
+    return JSON.parse(localStorage.getItem('taskrpg_settings')) || {};
+  } catch { return {}; }
+}
+
+function getServerUrl() {
+  const s = getSettings();
+  return (s.serverUrl || DEFAULT_SERVER).replace(/\/+$/, '');
+}
+
+function getApiPayload() {
+  const s = getSettings();
+  const payload = {};
+  if (s.api_key) payload.api_key = s.api_key;
+  if (s.provider) payload.provider = s.provider;
+  return payload;
+}
+
+function sk(key, date) {
+  if (date) return `taskrpg_${key}_${date}`;
+  return `taskrpg_${key}`;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function getTodayFormatted() {
+  const d = new Date();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  return `${m}月${day}日 周${weekdays[d.getDay()]}`;
+}
+
+function getDateFormatted(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  return `${y}年${m}月${day}日 周${weekdays[d.getDay()]}`;
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ── Settings Panel ──
+function openSettings() {
+  document.getElementById('settingsBackdrop').classList.add('open');
+  document.getElementById('settingsPanel').classList.add('open');
+  // Load current settings into form
+  const s = getSettings();
+  document.getElementById('settingsApiKey').value = s.api_key || '';
+  document.getElementById('settingsServerUrl').value = s.serverUrl || DEFAULT_SERVER;
+  selectProvider(s.provider || 'anthropic');
+}
+
+function closeSettings() {
+  document.getElementById('settingsBackdrop').classList.remove('open');
+  document.getElementById('settingsPanel').classList.remove('open');
+}
+
+function selectProvider(provider) {
+  document.querySelectorAll('#providerRadios .settings-radio').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.provider === provider);
+  });
+  // Store temporarily for save
+  document.getElementById('providerRadios').dataset.selected = provider;
+}
+
+function saveSettings() {
+  const api_key = document.getElementById('settingsApiKey').value.trim();
+  const serverUrl = document.getElementById('settingsServerUrl').value.trim() || DEFAULT_SERVER;
+  const provider = document.getElementById('providerRadios').dataset.selected || 'anthropic';
+
+  localStorage.setItem('taskrpg_settings', JSON.stringify({ api_key, serverUrl, provider }));
+  closeSettings();
+  checkApiBanner();
+  showToast('设置已保存');
+}
+
+function checkApiBanner() {
+  const s = getSettings();
+  const banner = document.getElementById('apiBanner');
+  if (!s.api_key) {
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// ── Tasks ──
+function loadTasks(date) {
+  try { return JSON.parse(localStorage.getItem(sk('tasks', date || TODAY))) || []; }
+  catch { return []; }
+}
+
+function saveTasks(tasks) {
+  localStorage.setItem(sk('tasks', TODAY), JSON.stringify(tasks));
+}
+
+function renderTasks() {
+  const tasks = loadTasks();
+  const list = document.getElementById('taskList');
+  const done = document.getElementById('allDone');
+
+  if (tasks.length === 0) {
+    list.innerHTML = '<div class="empty-state">// no tasks yet — type something above</div>';
+    done.innerHTML = '';
+    updateHeatmap();
+    return;
+  }
+
+  const allChecked = tasks.length > 0 && tasks.every(t => t.done);
+
+  list.innerHTML = tasks.map(t => `
+    <div class="task-item" data-id="${t.id}">
+      <button class="task-checkbox${t.done ? ' checked' : ''}" onclick="toggleTask('${t.id}')">${t.done ? '✓' : ''}</button>
+      <span class="task-text${t.done ? ' done' : ''}">${esc(t.name)}</span>
+      <button class="task-delete" onclick="deleteTask('${t.id}')">✕</button>
+    </div>
+  `).join('');
+
+  done.innerHTML = allChecked ? '<div class="all-done">ALL TASKS COMPLETE ✓</div>' : '';
+  updateHeatmap();
+}
+
+function addTask(name) {
+  const tasks = loadTasks();
+  tasks.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name,
+    done: false,
+    createdAt: Date.now(),
+  });
+  saveTasks(tasks);
+  renderTasks();
+}
+
+function toggleTask(id) {
+  const tasks = loadTasks();
+  const task = tasks.find(t => String(t.id) === String(id));
+  if (task) task.done = !task.done;
+  saveTasks(tasks);
+  renderTasks();
+}
+
+function deleteTask(id) {
+  const el = document.querySelector(`[data-id="${id}"]`);
+  if (el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    el.style.transition = 'all 0.2s';
+    setTimeout(() => {
+      saveTasks(loadTasks().filter(t => String(t.id) !== String(id)));
+      renderTasks();
+    }, 200);
+  }
+}
+
+// ── Review ──
+function loadReviewData(date) {
+  try { return JSON.parse(localStorage.getItem(sk('review', date || TODAY))) || null; }
+  catch { return null; }
+}
+
+function saveReviewData(text, aiAnalysis, score, dateKey) {
+  dateKey = dateKey || TODAY;
+  const existing = loadReviewData(dateKey) || {};
+  const data = {
+    text: text !== undefined ? text : existing.text || '',
+    aiAnalysis: aiAnalysis !== undefined ? aiAnalysis : existing.aiAnalysis || '',
+    score: score !== undefined ? score : existing.score,
+    timestamp: Date.now(),
+  };
+  localStorage.setItem(sk('review', dateKey), JSON.stringify(data));
+}
+
+let saveTimer = null;
+function debouncedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveReviewData(document.getElementById('reviewText').value);
+    updateHeatmap();
+  }, 5000);
+}
+
+// ── AI Analysis ──
+async function analyze() {
+  const text = document.getElementById('reviewText').value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('analyzeBtn');
+  const resp = document.getElementById('aiResponse');
+
+  btn.disabled = true;
+  btn.textContent = 'ANALYZING...';
+  resp.innerHTML = '<div class="loading-spinner"><div class="spinner"></div>analyzing...</div>';
+
+  const tasks = loadTasks();
+
+  try {
+    const res = await fetch(getServerUrl() + '/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        tasks_done: tasks.filter(t => t.done).map(t => t.name),
+        tasks_total: tasks.map(t => t.name),
+        ...getApiPayload(),
+      }),
+    });
+
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const html = formatAIResponse(data.result);
+    resp.innerHTML = `<div class="ai-response">${html}</div>`;
+
+    saveReviewData(text, data.result, data.score);
+    recordReviewDay();
+  } catch (e) {
+    resp.innerHTML = `<div class="ai-response" style="color:var(--text2)">
+      无法连接到分析服务器。请确保 server.py 正在运行。
+      <br><br><small style="color:var(--text3)">${esc(e.message)}</small>
+    </div>`;
+    showToast('分析失败: ' + e.message, true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'ANALYZE →';
+}
+
+function formatAIResponse(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^#+ (.+)$/gm, '<h3>$1</h3>')
+    .replace(/\[(.*?)\]/g, '<h3>$1</h3>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/\n/g, '<br>')
+    .replace(/<br><br>/g, '</p><p>')
+    .replace(/<h3>/g, '</p><h3>')
+    .replace(/<\/h3>/g, '</h3><p>');
+}
+
+// ── Review Days tracking ──
+function getReviewDays() {
+  try { return JSON.parse(localStorage.getItem(sk('reviewDays'))) || []; }
+  catch { return []; }
+}
+
+function recordReviewDay() {
+  const days = getReviewDays();
+  if (!days.includes(TODAY)) {
+    days.push(TODAY);
+    localStorage.setItem(sk('reviewDays'), JSON.stringify(days));
+  }
+  updateHeatmap();
+}
+
+// ── Streak ──
+function computeStreak() {
+  const days = getReviewDays();
+  const daySet = new Set(days);
+  let streak = 0;
+  const d = new Date();
+  while (true) {
+    const key = d.toISOString().slice(0, 10);
+    if (daySet.has(key)) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else {
+      if (streak === 0 && key === TODAY) {
+        d.setDate(d.getDate() - 1);
+        continue;
+      }
+      break;
+    }
+  }
+  return streak;
+}
+
+// ── Heatmap ──
+function getDayStatus(dateKey) {
+  const review = loadReviewData(dateKey);
+  const tasks = loadTasks(dateKey);
+  const hasText = review && review.text && review.text.trim();
+  const hasAI = review && review.aiAnalysis && review.aiAnalysis.trim();
+
+  if (!hasText && !hasAI) {
+    if (dateKey === TODAY) return { color: 'today-empty', label: '今天 - 还没开始', statusClass: '' };
+    return { color: '#ffffff', label: '无记录', statusClass: 'status-white' };
+  }
+
+  if (hasText && !hasAI) {
+    return { color: '#ff1744', label: '写了复盘，未分析', glow: true, statusClass: 'status-red' };
+  }
+
+    // Use AI score (1-4) if available, else keyword heuristic
+  const score = review.score;
+  if (score) {
+    const scoreMap = {
+      1: { color: '#ff1744', label: '正在摧毁人生', glow: true, statusClass: 'status-red' },
+      2: { color: '#ff6d00', label: '混日子', glow: false, statusClass: 'status-orange' },
+      3: { color: '#00e676', label: '老老实实生活', glow: false, statusClass: 'status-green' },
+      4: { color: '#ff2d78', label: '正在进化', glow: true, statusClass: 'status-pink' },
+    };
+    return scoreMap[score] || scoreMap[2];
+  }
+  // Fallback heuristic for old entries without score
+  const txt = (review.text || '').toLowerCase();
+  const badWords = ['游戏','手机','刷','摸鱼','没学','没做','废了'];
+  const goodWords = ['学习','完成','运动','跑步','读书','写了','效率'];
+  const badCount = badWords.filter(w => txt.includes(w)).length;
+  const goodCount = goodWords.filter(w => txt.includes(w)).length;
+  const hScore = goodCount > badCount + 1 ? 3 : (badCount > goodCount + 1 ? 1 : 2);
+  const scoreMap2 = {
+    1: { color: '#ff1744', label: '正在摧毁人生', glow: true, statusClass: 'status-red' },
+    2: { color: '#ff6d00', label: '混日子', glow: false, statusClass: 'status-orange' },
+    3: { color: '#00e676', label: '老老实实生活', glow: false, statusClass: 'status-green' },
+  };
+  return scoreMap2[hScore];
+}
+
+function updateHeatmap() {
+  const grid = document.getElementById('heatmapGrid');
+  const weekdaysEl = document.getElementById('heatmapWeekdays');
+  const cells = [];
+
+  const dayLabels = ['一', '二', '三', '四', '五', '六', '日'];
+  weekdaysEl.innerHTML = ['', '', ''].map(() =>
+    `<div class="heatmap-weekday-label"></div>`
+  ).join('');
+
+  for (let i = 20; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const status = getDayStatus(key);
+    const dateLabel = getDateFormatted(key);
+    const weekday = dayLabels[d.getDay() === 0 ? 6 : d.getDay() - 1];
+
+    if (status.color === 'today-empty') {
+      cells.push(`<div class="heatmap-cell today-empty" data-tooltip="${weekday} ${dateLabel} — ${status.label}"></div>`);
+    } else {
+      const glowClass = status.glow ? ' glow-red' : (status.glowBlue ? ' glow-blue' : '');
+      cells.push(`<div class="heatmap-cell${glowClass}" style="background:${status.color}" data-tooltip="${weekday} ${dateLabel} — ${status.label}"></div>`);
+    }
+  }
+  grid.innerHTML = cells.join('');
+
+  const streak = computeStreak();
+  const streakEl = document.getElementById('heatmapStreak');
+  streakEl.textContent = streak >= 2 ? `🔥 连续${streak}天` : '';
+}
+
+// ── History Drawer ──
+function openDrawer() {
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderHistoryList();
+}
+
+function closeDrawer() {
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+const expandedAI = new Set();
+const loadingAI = new Set();
+
+function renderHistoryList() {
+  const container = document.getElementById('historyList');
+  const entries = [];
+
+  for (let i = 0; i < 30; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const review = loadReviewData(key);
+    const tasks = loadTasks(key);
+
+    const hasContent = review && review.text;
+    if (!hasContent && tasks.length === 0 && i > 0) continue;
+
+    const dateLabel = getDateFormatted(key);
+    const hasAI = review && review.aiAnalysis;
+    const hasText = review && review.text && review.text.trim();
+    const isAIExpanded = expandedAI.has(key);
+    const status = getDayStatus(key);
+
+    let tasksHtml = '';
+    if (tasks.length > 0) {
+      tasksHtml = `<div class="journal-tasks">
+        <div class="journal-tasks-label">当日任务</div>
+        ${tasks.map(t => `<div class="journal-task-item ${t.done ? 'done' : 'undone'}">${t.done ? '✓' : '○'} ${esc(t.name)}</div>`).join('')}
+      </div>`;
+    }
+
+    let aiHtml = '';
+    if (hasText) {
+      const aiContent = hasAI ? formatAIResponse(review.aiAnalysis) : '<span style="color:var(--text3);font-size:.8rem">// 点击分析此日记录...</span>';
+      const isLoading = loadingAI.has(key);
+      const btnLabel = isLoading ? '分析中...' : (isAIExpanded ? 'HIDE AI ▴' : 'VIEW AI ▾');
+      aiHtml = `<div class="journal-ai-toggle">
+        <button class="journal-ai-btn" onclick="toggleAI('${key}')" ${isLoading ? 'disabled' : ''}>${btnLabel}</button>
+        ${isAIExpanded ? `<div class="journal-ai-content">${isLoading ? '<span style="color:var(--text3)">AI 分析中，请稍候...</span>' : aiContent}</div>` : ''}
+      </div>`;
+    }
+
+    const statusClass = status.statusClass || '';
+
+    if (!hasContent) {
+      entries.push(`<div data-journal-key="${key}" class="journal-entry ${statusClass}">
+        <div class="journal-date">${dateLabel}</div>
+        <div class="journal-text" style="color:var(--text3);font-style:italic">无复盘记录</div>
+        ${tasksHtml}
+      </div>`);
+    } else {
+      entries.push(`<div data-journal-key="${key}" class="journal-entry ${statusClass}">
+        <div class="journal-date">${dateLabel}</div>
+        <div class="journal-text">${esc(review.text)}</div>
+        ${tasksHtml}
+        ${aiHtml}
+      </div>`);
+    }
+  }
+
+  container.innerHTML = entries.length > 0 ? entries.join('')
+    : '<div class="history-empty">Nothing yet</div>';
+}
+
+async function toggleAI(key) {
+  if (expandedAI.has(key) && !loadingAI.has(key)) {
+    expandedAI.delete(key);
+    renderHistoryList();
+    return;
+  }
+  expandedAI.add(key);
+
+  // Check if real AI analysis exists
+  const review = loadReviewData(key);
+  const PLACEHOLDER = 'AI分析内容';
+  const hasRealAI = review && review.aiAnalysis && review.aiAnalysis !== PLACEHOLDER && review.aiAnalysis.length > 20;
+
+  if (!hasRealAI && review && review.text) {
+    // Trigger on-demand analysis for this historical entry
+    loadingAI.add(key);
+    renderHistoryList(); // Show loading state first
+    try {
+      const res = await fetch(getServerUrl() + '/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: review.text, tasks_done: [], tasks_total: [], ...getApiPayload() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.result) {
+          saveReviewData(review.text, data.result, data.score, key);
+          updateHeatmap();
+        }
+      }
+    } catch(e) { /* server may not be running */ } finally {
+      loadingAI.delete(key);
+    }
+  } else {
+    loadingAI.delete(key);
+  }
+
+  renderHistoryList();
+  setTimeout(() => {
+    const el = document.querySelector('[data-journal-key="' + key + '"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 80);
+}
+
+// ── Export Journal ──
+function exportJournal() {
+  const lines = [];
+  const sep = '═══════════════════════════════';
+
+  for (let i = 0; i < 90; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const review = loadReviewData(key);
+    if (!review || !review.text) continue;
+
+    const dateLabel = getDateFormatted(key);
+    lines.push(sep);
+    lines.push(dateLabel);
+    lines.push(sep);
+    lines.push(review.text);
+
+    if (review.aiAnalysis) {
+      lines.push('');
+      lines.push('[AI分析]');
+      lines.push(review.aiAnalysis);
+    }
+
+    lines.push('');
+  }
+
+  if (lines.length === 0) {
+    showToast('没有可以导出的日记', true);
+    return;
+  }
+
+  lines.push(sep);
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'taskrpg-journal.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('日记已导出');
+}
+
+// ── Trend Analysis ──
+async function analyzeTrend() {
+  const btn = document.getElementById('trendBtn');
+  const result = document.getElementById('trendResult');
+
+  const logs = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const review = loadReviewData(key);
+    const tasks = loadTasks(key);
+    if (review && review.text) {
+      logs.push({
+        date: key,
+        text: review.text,
+        tasksTotal: tasks.length,
+        tasksDone: tasks.filter(t => t.done).length,
+      });
+    }
+  }
+
+  if (logs.length < 2) {
+    showToast('至少需要 2 天的记录才能分析趋势', true);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'ANALYZING...';
+  result.innerHTML = '<div class="loading-spinner"><div class="spinner"></div>analyzing trends...</div>';
+
+  try {
+    const res = await fetch(getServerUrl() + '/api/trend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ logs, ...getApiPayload() }),
+    });
+
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    result.innerHTML = `<div class="trend-result">${formatAIResponse(data.result)}</div>`;
+  } catch (e) {
+    result.innerHTML = '';
+    showToast('趋势分析失败: ' + e.message, true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'TREND ANALYSIS';
+}
+
+// ── Smart Suggestions ──
+async function loadSuggestions() {
+  const area = document.getElementById('suggestionsArea');
+
+  const logs = [];
+  for (let i = 1; i <= 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const review = loadReviewData(key);
+    if (review && review.text) {
+      logs.push({ date: key, text: review.text });
+    }
+  }
+
+  if (logs.length < 3) return;
+
+  try {
+    const res = await fetch(getServerUrl() + '/api/suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ logs, ...getApiPayload() }),
+    });
+
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.suggestions || data.suggestions.length === 0) return;
+
+    area.innerHTML = `
+      <div class="suggestions-wrap">
+        <div class="suggestions-label">AI Recommendations</div>
+        ${data.suggestions.map((s, i) => `
+          <div class="suggestion-item" id="sug-${i}">
+            <span class="suggestion-text">${esc(s)}</span>
+            <button class="suggestion-add" onclick="adoptSuggestion(${i}, '${esc(s).replace(/'/g, "\\'")}')">+ ADOPT</button>
+          </div>
+        `).join('')}
+      </div>`;
+  } catch (e) {
+    // Silently fail
+  }
+}
+
+function adoptSuggestion(index, text) {
+  const temp = document.createElement('div');
+  temp.innerHTML = text;
+  addTask(temp.textContent);
+  const el = document.getElementById('sug-' + index);
+  if (el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(10px)';
+    el.style.transition = 'all 0.2s';
+    setTimeout(() => el.remove(), 200);
+  }
+  showToast('已添加到任务列表');
+}
+
+// ── Pomodoro Timer ──
+const POMO_MODES = {
+  quick:   { label: 'SPRINT ⚡',  work: 30 * 60, breakTime: 5 * 60 },
+  deep:    { label: 'DEEP 💪',    work: 60 * 60, breakTime: 10 * 60 },
+  boulder: { label: 'BOULDER 🗿', work: 90 * 60, breakTime: 15 * 60 },
+};
+
+const Pomo = {
+  interval: null,
+
+  state() {
+    try {
+      const s = JSON.parse(localStorage.getItem(sk('pomodoro')));
+      if (s && POMO_MODES[s.modeKey]) return s;
+      return this.defaultState();
+    }
+    catch { return this.defaultState(); }
+  },
+
+  defaultState() {
+    return { modeKey: 'quick', phase: 'work', remaining: POMO_MODES.quick.work, isRunning: false, startedAt: null };
+  },
+
+  save(s) {
+    localStorage.setItem(sk('pomodoro'), JSON.stringify(s));
+  },
+
+  mode(s) {
+    return POMO_MODES[s.modeKey] || POMO_MODES.quick;
+  },
+
+  init() {
+    const s = this.state();
+    if (s.isRunning && s.startedAt) {
+      const elapsed = Math.floor((Date.now() - s.startedAt) / 1000);
+      s.remaining = Math.max(0, s.remaining - elapsed);
+      s.startedAt = Date.now();
+      this.save(s);
+      if (s.remaining <= 0) {
+        this.onComplete(s);
+        return;
+      }
+      this.startInterval();
+    }
+    this.render(s);
+  },
+
+  setMode(modeKey) {
+    const s = this.state();
+    if (s.isRunning) return;
+    const mode = POMO_MODES[modeKey];
+    if (!mode) return;
+    this.stopInterval();
+    const newS = { modeKey, phase: 'work', remaining: mode.work, isRunning: false, startedAt: null };
+    this.save(newS);
+    this.render(newS);
+  },
+
+  toggle() {
+    const s = this.state();
+    if (s.isRunning) {
+      if (s.startedAt) {
+        const elapsed = Math.floor((Date.now() - s.startedAt) / 1000);
+        s.remaining = Math.max(0, s.remaining - elapsed);
+      }
+      s.isRunning = false;
+      s.startedAt = null;
+      this.save(s);
+      this.stopInterval();
+    } else {
+      s.isRunning = true;
+      s.startedAt = Date.now();
+      this.save(s);
+      this.requestNotificationPermission();
+      this.startInterval();
+    }
+    this.render(s);
+  },
+
+  reset() {
+    this.stopInterval();
+    const s = this.state();
+    const mode = this.mode(s);
+    const newS = { modeKey: s.modeKey, phase: 'work', remaining: mode.work, isRunning: false, startedAt: null };
+    this.save(newS);
+    this.render(newS);
+  },
+
+  skip() {
+    this.stopInterval();
+    const s = this.state();
+    const mode = this.mode(s);
+    if (s.phase === 'work') {
+      this.save({ modeKey: s.modeKey, phase: 'break', remaining: mode.breakTime, isRunning: false, startedAt: null });
+    } else {
+      this.save({ modeKey: s.modeKey, phase: 'work', remaining: mode.work, isRunning: false, startedAt: null });
+    }
+    this.render(this.state());
+  },
+
+  startInterval() {
+    this.stopInterval();
+    this.interval = setInterval(() => this.tick(), 1000);
+  },
+
+  stopInterval() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+    }
+  },
+
+  tick() {
+    const s = this.state();
+    if (!s.isRunning) { this.stopInterval(); return; }
+
+    const elapsed = Math.floor((Date.now() - s.startedAt) / 1000);
+    const remaining = Math.max(0, s.remaining - elapsed);
+
+    if (remaining <= 0) {
+      this.onComplete(s);
+      return;
+    }
+
+    this.renderTime(remaining, s);
+  },
+
+  onComplete(s) {
+    this.stopInterval();
+    const mode = this.mode(s);
+    this.playBeep();
+    this.notify(s.phase === 'work' ? '休息时间。' : '休息结束。');
+
+    if (s.phase === 'work') {
+      const newS = { modeKey: s.modeKey, phase: 'break', remaining: mode.breakTime, isRunning: true, startedAt: Date.now() };
+      this.save(newS);
+      this.render(newS);
+      this.startInterval();
+      showToast('休息时间');
+    } else {
+      const newS = { modeKey: s.modeKey, phase: 'work', remaining: mode.work, isRunning: false, startedAt: null };
+      this.save(newS);
+      this.render(newS);
+      showToast('休息结束');
+    }
+  },
+
+  render(s) {
+    const remaining = s.isRunning && s.startedAt
+      ? Math.max(0, s.remaining - Math.floor((Date.now() - s.startedAt) / 1000))
+      : s.remaining;
+    this.renderTime(remaining, s);
+  },
+
+  renderTime(remaining, s) {
+    const mode = this.mode(s);
+    const min = Math.floor(remaining / 60);
+    const sec = remaining % 60;
+    const timeStr = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+
+    const phaseLabel = s.phase === 'work' ? mode.label : 'BREAK';
+    document.getElementById('pomoModeLabel').textContent = phaseLabel;
+
+    const timeDisplay = document.getElementById('pomoTime');
+    timeDisplay.textContent = timeStr;
+
+    let cls = 'pomo-time-display';
+    if (s.isRunning) {
+      cls += ' running';
+      cls += s.phase === 'work' ? ' work-phase' : ' break-phase';
+    }
+    timeDisplay.className = cls;
+
+    const ring = document.getElementById('pomoRing');
+    if (s.isRunning) {
+      ring.className = 'pomo-ring active ' + (s.phase === 'work' ? 'work-ring' : 'break-ring');
+    } else {
+      ring.className = 'pomo-ring';
+    }
+
+    const bar = document.getElementById('pomoProgress');
+    const total = s.phase === 'work' ? mode.work : mode.breakTime;
+    const pct = ((total - remaining) / total * 100).toFixed(1);
+    bar.style.width = pct + '%';
+    bar.className = 'pomo-progress-bar ' + (s.phase === 'work' ? 'work' : 'break-mode');
+
+    document.getElementById('pomoStartBtn').textContent = s.isRunning ? '暂停' : '开始';
+
+    const btns = document.querySelectorAll('.pomo-mode-btn');
+    btns.forEach(btn => {
+      const mk = btn.dataset.mode;
+      btn.classList.toggle('active', mk === s.modeKey);
+      btn.classList.toggle('locked', s.isRunning);
+    });
+  },
+
+  playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const beep = (time) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 440;
+        osc.type = 'sine';
+        gain.gain.value = 0.3;
+        osc.start(time);
+        osc.stop(time + 0.15);
+      };
+      const now = ctx.currentTime;
+      beep(now);
+      beep(now + 0.25);
+      beep(now + 0.5);
+    } catch (e) {}
+  },
+
+  notify(msg) {
+    if (Notification.permission === 'granted') {
+      new Notification('ChangeToABetterLife', { body: msg });
+    }
+  },
+
+  requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  },
+};
+
+// ── Init ──
+function init() {
+  document.getElementById('todayDate').textContent = getTodayFormatted();
+
+  const input = document.getElementById('taskInput');
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && input.value.trim()) {
+      addTask(input.value.trim());
+      input.value = '';
+    }
+  });
+
+  const textarea = document.getElementById('reviewText');
+  const savedReview = loadReviewData();
+  if (savedReview && savedReview.text) {
+    textarea.value = savedReview.text;
+  }
+  textarea.addEventListener('input', debouncedSave);
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault();
+      analyze();
+    }
+  });
+
+  if (savedReview && savedReview.aiAnalysis && savedReview.aiAnalysis.length > 20) {
+    document.getElementById('aiResponse').innerHTML =
+      `<div class="ai-response">${formatAIResponse(savedReview.aiAnalysis)}</div>`;
+  }
+
+  renderTasks();
+  updateHeatmap();
+  Pomo.init();
+  loadSuggestions();
+  checkApiBanner();
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeDrawer();
+      closeSettings();
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
